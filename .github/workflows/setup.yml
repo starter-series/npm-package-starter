@@ -1,0 +1,55 @@
+name: Template Setup
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  setup:
+    if: github.event.created || github.run_number == 1
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check if template
+        id: check
+        run: |
+          NAME=$(node -e "console.log(require('./package.json').name)")
+          if [ "$NAME" = "my-package" ]; then
+            echo "is_template=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_template=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create setup checklist
+        if: steps.check.outputs.is_template == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "Setup: Configure your npm package" \
+            --body "$(cat <<'EOF'
+          Welcome! You've created a new project from **npm-package-starter**. Here's your setup checklist:
+
+          ## Required
+          - [ ] Update `package.json` — change `name`, `description`, `author`, and `keywords`
+          - [ ] Update `repository.url` in `package.json` to point to your repo
+          - [ ] Write your package code in `src/`
+          - [ ] Write tests in `tests/`
+
+          ## npm Trusted Publishing (OIDC — no tokens needed)
+          - [ ] Create an npm account at [npmjs.com](https://www.npmjs.com)
+          - [ ] Go to **npmjs.com → Settings → Trusted Publishers → Add GitHub Actions**
+          - [ ] Enter your GitHub repo owner, repo name, workflow filename (`cd.yml`), and environment (`npm`)
+          - [ ] Create a GitHub Environment named `npm` in your repo settings (Settings → Environments → New)
+
+          See [docs/NPM_PUBLISH_SETUP.md](docs/NPM_PUBLISH_SETUP.md) for a detailed guide.
+
+          ## Recommended
+          - [ ] Delete this issue when done
+
+          Happy publishing!
+          EOF
+          )"

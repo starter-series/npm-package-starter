@@ -1,0 +1,10 @@
+.github/
+tests/
+docs/
+scripts/
+eslint.config.js
+.gitignore
+.DS_Store
+.env
+.idea/
+*.tgz
