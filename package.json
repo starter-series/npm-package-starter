@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "A lightweight npm package with CI/CD baked in.",
   "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
   "files": [
     "src"
   ],
@@ -27,6 +30,7 @@
     "@eslint/js": "^10.0.1",
     "eslint": "^10.0.3",
     "globals": "^17.4.0",
-    "jest": "^30.3.0"
+    "jest": "^30.3.0",
+    "license-checker": "^25.0.1"
   }
 }
