@@ -26,22 +26,25 @@ Write your package. One-click publish. Zero secrets needed.
 
 **Requires Node.js 22 LTS or newer.** (Node 20 reached end-of-life in April 2026.)
 
+**Via [create-starter](https://github.com/starter-series/create-starter)** (recommended):
+
 ```bash
-# 1. Click "Use this template" on GitHub (or clone)
-git clone https://github.com/starter-series/npm-package-starter.git my-package
-cd my-package
-
-# 2. Install dependencies
-npm install
-
-# 3. Run tests
-npm test
-
-# 4. Start coding
-#    → Replace src/index.js with your package code
-#    → Update tests/index.test.js
-#    → Update package.json (name, description, author, keywords)
+npx @starter-series/create my-package --template npm-package
+cd my-package && npm install && npm test
 ```
+
+**Or clone directly:**
+
+```bash
+git clone https://github.com/starter-series/npm-package-starter my-package
+cd my-package && npm install && npm test
+```
+
+Then start coding:
+
+- Replace `src/index.js` with your package code
+- Update `tests/index.test.js`
+- Update `package.json` (name, description, author, keywords)
 
 ## What's Included
 
