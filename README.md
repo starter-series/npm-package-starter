@@ -24,6 +24,8 @@ Write your package. One-click publish. Zero secrets needed.
 
 ## Quick Start
 
+**Requires Node.js 22 LTS or newer.** (Node 20 reached end-of-life in April 2026.)
+
 ```bash
 # 1. Click "Use this template" on GitHub (or clone)
 git clone https://github.com/starter-series/npm-package-starter.git my-package

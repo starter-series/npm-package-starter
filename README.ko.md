@@ -24,6 +24,8 @@
 
 ## 빠른 시작
 
+**Node.js 22 LTS 이상 필요.** (Node 20은 2026년 4월에 EOL.)
+
 ```bash
 # 1. GitHub에서 "Use this template" 클릭 (또는 clone)
 git clone https://github.com/starter-series/npm-package-starter.git my-package
