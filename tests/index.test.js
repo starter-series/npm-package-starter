@@ -25,6 +25,7 @@ describe('isEven', () => {
   test('returns true for even numbers', () => {
     expect(isEven(0)).toBe(true);
     expect(isEven(2)).toBe(true);
+    expect(isEven(-2)).toBe(true);
     expect(isEven(-4)).toBe(true);
   });
 
@@ -34,13 +35,24 @@ describe('isEven', () => {
     expect(isEven(-7)).toBe(false);
   });
 
+  test('returns false for non-integer finite numbers', () => {
+    // Non-integers are neither even nor odd; we accept them as input
+    // (they are finite numbers) and report false. Callers who need
+    // strict integer validation should check with Number.isInteger first.
+    expect(isEven(1.5)).toBe(false);
+    expect(isEven(2.5)).toBe(false);
+    expect(isEven(-0.1)).toBe(false);
+  });
+
   test('throws on non-number input', () => {
     expect(() => isEven('2')).toThrow(TypeError);
     expect(() => isEven(null)).toThrow(TypeError);
+    expect(() => isEven(undefined)).toThrow(TypeError);
   });
 
   test('throws on Infinity and NaN', () => {
     expect(() => isEven(Infinity)).toThrow(TypeError);
+    expect(() => isEven(-Infinity)).toThrow(TypeError);
     expect(() => isEven(NaN)).toThrow(TypeError);
   });
 });
