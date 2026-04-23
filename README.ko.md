@@ -26,22 +26,25 @@
 
 **Node.js 22 LTS 이상 필요.** (Node 20은 2026년 4월에 EOL.)
 
+**[create-starter](https://github.com/starter-series/create-starter) 사용** (권장):
+
 ```bash
-# 1. GitHub에서 "Use this template" 클릭 (또는 clone)
-git clone https://github.com/starter-series/npm-package-starter.git my-package
-cd my-package
-
-# 2. 의존성 설치
-npm install
-
-# 3. 테스트 실행
-npm test
-
-# 4. 코딩 시작
-#    → src/index.js를 패키지 코드로 교체
-#    → tests/index.test.js 업데이트
-#    → package.json 업데이트 (name, description, author, keywords)
+npx @starter-series/create my-package --template npm-package
+cd my-package && npm install && npm test
 ```
+
+**또는 직접 clone:**
+
+```bash
+git clone https://github.com/starter-series/npm-package-starter my-package
+cd my-package && npm install && npm test
+```
+
+그다음 코딩 시작:
+
+- `src/index.js`를 패키지 코드로 교체
+- `tests/index.test.js` 업데이트
+- `package.json` 업데이트 (name, description, author, keywords)
 
 ## 포함된 구성
 
