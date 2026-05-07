@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "lint": "eslint src/ tests/",
-    "test": "jest --verbose",
+    "test": "jest --verbose --coverage",
     "check:metadata": "node scripts/check-metadata.js",
     "prepublishOnly": "node scripts/check-metadata.js",
     "version:patch": "node scripts/bump-version.js patch",
@@ -34,5 +34,15 @@
     "globals": "^17.5.0",
     "jest": "^30.3.0",
     "license-checker": "^25.0.1"
+  },
+  "jest": {
+    "coverageThreshold": {
+      "global": {
+        "statements": 95,
+        "branches": 95,
+        "functions": 95,
+        "lines": 95
+      }
+    }
   }
 }
