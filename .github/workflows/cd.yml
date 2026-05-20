@@ -41,7 +41,10 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          # Publish on Active LTS (24). ci.yml's matrix verifies that the
+          # tarball still runs on Maintenance LTS (22) for downstream
+          # consumers until its EOL (April 2027).
+          node-version: 24
           cache: 'npm'
           registry-url: 'https://registry.npmjs.org'
 
@@ -52,7 +55,13 @@ jobs:
         run: npm publish --provenance --access public
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        # Pinned to the v3.0.0 commit SHA (not the floating @v3 tag). The
+        # May 2026 TanStack incident showed valid SLSA provenance can be
+        # issued for hijacked workflow runs — pinning third-party actions
+        # to SHAs is the cheapest defense against tag-rewrite supply-chain
+        # attacks. Dependabot's github-actions group will open SHA-bump
+        # PRs as new releases land. Update the trailing comment in lockstep.
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
           tag_name: v${{ steps.pkg.outputs.version }}
           name: v${{ steps.pkg.outputs.version }}
