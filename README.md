@@ -184,6 +184,40 @@ This template intentionally uses vanilla JavaScript to stay minimal. If you need
 
 This keeps TypeScript opt-in rather than forcing a build pipeline on everyone.
 
+## Scope
+
+**Currently implemented**
+- OIDC trusted publishing via `cd.yml` (no `NPM_TOKEN`)
+- npm provenance statements — verifiable with `npm audit signatures`
+- CI: `npm ci --ignore-scripts`, `npm audit`, ESLint v9, Jest, per-repo coverage threshold gate
+- CodeQL static analysis (push/PR + weekly)
+- Weekly CI health-check + auto-issue on failure (`maintenance.yml`)
+- Stale issue/PR triage (`stale.yml`)
+- Gitleaks pinned to a specific version with sha256 checksum verification
+- Placeholder-metadata publish guard (refuses to publish unedited `my-package` etc.)
+- Auto-updated `CHANGELOG.md` via `update-changelog.yml`
+- First-use setup checklist via `setup.yml`
+
+**Planned**
+- None on a public roadmap. Issues drive scope.
+
+**Design intent**
+- Vanilla JavaScript, not TypeScript — keeps the surface a build-step-free starter
+- Zero runtime dependencies, 4 devDependencies — minimal supply-chain surface
+- OIDC trusted publishing over long-lived tokens — no `NPM_TOKEN` to rotate or leak
+- `--ignore-scripts` in CI/CD — mitigates Shai-Hulud-style postinstall attacks
+- Per-repo coverage threshold (not a global standard) — projects start where they are
+- Workflows + docs live in the same repo so AI assistants do not have to be re-briefed each clone
+
+**Non-goals**
+- Built-in TypeScript pipeline (opt-in only; see [What about TypeScript?](#what-about-typescript) above)
+- Bundlers / build steps (esbuild, tsup, rollup) — add per project
+- Monorepo tooling (pnpm workspaces, Turborepo)
+- Pre-publish git tag enforcement beyond the duplicate-version guard
+
+**Redacted**
+- N/A — infrastructure template with no external persons, accounts, or internal cases referenced.
+
 ## Contributing
 
 PRs welcome. Please use the [PR template](.github/PULL_REQUEST_TEMPLATE.md).
