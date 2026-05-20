@@ -184,6 +184,40 @@ Trusted publishing, provenance, CI/CD, 프로젝트 구조를 직접 설정하�
 
 TypeScript는 강제가 아니라 선택입니다.
 
+## 범위
+
+**현재 구현됨 (Currently implemented)**
+- `cd.yml`을 통한 OIDC trusted publishing (`NPM_TOKEN` 불필요)
+- npm provenance statement — `npm audit signatures`로 검증 가능
+- CI: `npm ci --ignore-scripts`, `npm audit`, ESLint v9, Jest, 레포 단위 커버리지 임계값 게이트
+- CodeQL 정적 분석 (push/PR + 주간)
+- 주간 CI 헬스 체크 + 실패 시 이슈 자동 생성 (`maintenance.yml`)
+- 비활성 이슈/PR 자동 정리 (`stale.yml`)
+- Gitleaks 특정 버전 + sha256 체크섬으로 핀
+- placeholder 메타데이터 publish 가드 (수정 안 된 `my-package` 등은 publish 거부)
+- `update-changelog.yml`로 `CHANGELOG.md` 자동 갱신
+- `setup.yml`로 첫 사용 시 셋업 체크리스트
+
+**계획됨 (Planned)**
+- 공개 로드맵에 명시된 것 없음. 이슈가 범위를 정의.
+
+**설계 의도 (Design intent)**
+- TypeScript가 아닌 vanilla JavaScript — 빌드 스텝 없는 표면 유지
+- runtime 의존성 0개, devDependency 4개 — supply-chain 표면 최소화
+- 장기 토큰 대신 OIDC trusted publishing — 회전/유출할 `NPM_TOKEN` 자체가 없음
+- CI/CD에서 `--ignore-scripts` — Shai-Hulud 류 postinstall 공격 완화
+- 글로벌 기준이 아닌 레포 단위 커버리지 임계값 — 프로젝트는 각자의 출발점에서 시작
+- 워크플로우 + 문서가 한 레포 안에 — AI 어시스턴트가 clone마다 다시 브리핑받지 않도록
+
+**비목표 (Non-goals)**
+- 기본 내장 TypeScript 파이프라인 (opt-in만, 위 [TypeScript는?](#typescript는) 참조)
+- 번들러 / 빌드 스텝 (esbuild, tsup, rollup) — 프로젝트별로 추가
+- 모노레포 도구 (pnpm workspaces, Turborepo)
+- 중복 버전 가드 외의 사전 git 태그 강제
+
+**Redacted**
+- 해당 없음 — 외부 인물·계정·내부 사례 없는 인프라 템플릿.
+
 ## 기여
 
 PR 환영합니다. [PR 템플릿](.github/PULL_REQUEST_TEMPLATE.md)을 사용해 주세요.
