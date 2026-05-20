@@ -11,14 +11,25 @@ permissions:
   contents: read
 
 jobs:
-  ci:
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Test on every supported Node LTS in the engines range (>=22).
+        # Active LTS (24) is the publish target in cd.yml; Maintenance LTS
+        # (22) is included to catch regressions for downstream consumers
+        # still on 22 until its EOL (April 2027).
+        node-version: ['22', '24']
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Scan for secrets
+        # Run gitleaks only once per workflow (on the lowest Node matrix
+        # cell); the scan is filesystem-only and version-independent.
+        if: matrix.node-version == '22'
         env:
           # Bump together; checksum from
           # https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_checksums.txt
@@ -33,10 +44,11 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
       - name: Check for large files
+        if: matrix.node-version == '22'
         run: |
           LARGE=$(find . -not -path './.git/*' -not -path './node_modules/*' -type f -size +5M)
           if [ -n "$LARGE" ]; then
@@ -49,7 +61,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Check licenses
-        run: npx license-checker --failOn "GPL-2.0;GPL-3.0;AGPL-3.0"
+        run: npx license-checker-evergreen --failOn "GPL-2.0;GPL-3.0;AGPL-3.0"
 
       - name: Security audit
         run: npm audit --audit-level=high
@@ -61,4 +73,21 @@ jobs:
         run: npm test
 
       - name: Build verification
+        if: matrix.node-version == '24'
         run: npm pack --dry-run
+
+  # Single-named aggregator so branch protection can require one check
+  # ("ci") instead of every matrix cell. Stays green only if every matrix
+  # cell finished with success.
+  ci:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Aggregate matrix result
+        run: |
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "::error::Matrix CI failed (result=${{ needs.test.result }})"
+            exit 1
+          fi
+          echo "All matrix cells passed."

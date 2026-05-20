@@ -8,7 +8,10 @@ If you discover a security vulnerability, please report it responsibly:
 2. Email **heznpc@gmail.com** or use [GitHub Security Advisories](../../security/advisories/new).
 3. Include steps to reproduce, impact assessment, and suggested fix if possible.
 
-We will respond within 48 hours and work with you to resolve the issue.
+This is a single-maintainer open-source template. Reports are
+acknowledged on a best-effort basis as time allows — no SLA. Critical
+issues affecting the publish pipeline (e.g., CD workflow compromise)
+are prioritized. For routine dependency advisories, prefer Dependabot.
 
 ## Security Features
 

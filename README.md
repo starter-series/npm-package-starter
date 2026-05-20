@@ -184,6 +184,15 @@ This template intentionally uses vanilla JavaScript to stay minimal. If you need
 
 This keeps TypeScript opt-in rather than forcing a build pipeline on everyone.
 
+### Optional ESLint hardening
+
+The shipped `eslint.config.js` uses only `@eslint/js/recommended` — the floor. If your package processes untrusted input, consider adding:
+
+- [`eslint-plugin-security`](https://www.npmjs.com/package/eslint-plugin-security) — catches eval, child_process injection, regex backtracking patterns
+- [`eslint-plugin-n`](https://www.npmjs.com/package/eslint-plugin-n) — Node-specific best practices (deprecated builtins, missing `require`, etc.)
+
+Both are opt-in to keep the default dependency surface minimal.
+
 ## Scope
 
 **Currently implemented**

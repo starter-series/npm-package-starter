@@ -1,3 +1,10 @@
+# CodeQL — advanced setup (not default setup).
+#
+# Why advanced: this file is visible to anyone cloning the starter, so
+# they can see exactly which queries run and on what schedule. Default
+# setup hides the workflow behind a UI toggle and is less discoverable
+# for downstream maintainers. The trade-off is that we own version
+# bumps (Dependabot's github-actions group handles them weekly).
 name: CodeQL
 
 on:

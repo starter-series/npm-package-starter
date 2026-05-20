@@ -184,6 +184,15 @@ Trusted publishing, provenance, CI/CD, 프로젝트 구조를 직접 설정하�
 
 TypeScript는 강제가 아니라 선택입니다.
 
+### 선택적 ESLint 강화
+
+기본 `eslint.config.js`는 `@eslint/js/recommended`만 사용 — 최저선. 패키지가 untrusted input을 다룬다면 다음을 옵트인으로 추가 검토:
+
+- [`eslint-plugin-security`](https://www.npmjs.com/package/eslint-plugin-security) — eval, child_process injection, regex backtracking 패턴 탐지
+- [`eslint-plugin-n`](https://www.npmjs.com/package/eslint-plugin-n) — Node 특화 베스트 프랙티스 (deprecated builtin, 누락 `require` 등)
+
+기본 의존성 표면을 최소화하기 위해 둘 다 옵트인 유지.
+
 ## 범위
 
 **현재 구현됨 (Currently implemented)**
