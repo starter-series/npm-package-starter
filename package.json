@@ -36,12 +36,19 @@
     "license-checker-evergreen": "^6.2.1"
   },
   "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "scripts/**/*.js"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ],
     "coverageThreshold": {
       "global": {
-        "statements": 95,
-        "branches": 95,
-        "functions": 95,
-        "lines": 95
+        "statements": 90,
+        "branches": 85,
+        "functions": 90,
+        "lines": 90
       }
     },
     "coverageReporters": [

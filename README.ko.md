@@ -62,8 +62,9 @@ cd my-package && npm install && npm test
 ├── docs/
 │   └── NPM_PUBLISH_SETUP.md   # Trusted publishing 설정 가이드
 ├── scripts/
-│   └── bump-version.js         # Semver 버전 범퍼
-├── eslint.config.js            # ESLint v9 flat config
+│   ├── bump-version.js         # SemVer 버전 범퍼 (prepublishOnly-safe)
+│   └── check-metadata.js       # placeholder 메타데이터 publish 거부
+├── eslint.config.js            # ESLint v10 flat config
 ├── .gitignore
 ├── .npmignore                  # 배포 패키지를 깔끔하게 유지
 └── package.json
@@ -76,9 +77,9 @@ cd my-package && npm install && npm test
 - **CI 파이프라인** — 모든 push와 PR에서 보안 감사, 린트, 테스트
 - **CD 파이프라인** — 원클릭 npm 배포 + GitHub Release 자동 생성
 - **버전 관리** — `npm run version:patch/minor/major`
-- **ESLint v9** — Flat config, Node + Jest globals
+- **ESLint v10** — Flat config, Node + Jest globals
 - **템플릿 셋업** — 첫 사용 시 설정 체크리스트 이슈 자동 생성
-- **최소 의존성** — devDependency 4개, runtime 0개
+- **최소 의존성** — devDependency 5개, runtime 0개
 
 ## CI/CD
 
@@ -88,7 +89,7 @@ cd my-package && npm install && npm test
 |------|------|
 | Install | `npm ci` lockfile 검증 |
 | 보안 감사 | `npm audit`로 의존성 취약점 확인 |
-| 린트 | ESLint v9 flat config |
+| 린트 | ESLint v10 flat config |
 | 테스트 | Jest |
 
 ### 보안 & 유지보수
@@ -198,7 +199,7 @@ TypeScript는 강제가 아니라 선택입니다.
 **현재 구현됨 (Currently implemented)**
 - `cd.yml`을 통한 OIDC trusted publishing (`NPM_TOKEN` 불필요)
 - npm provenance statement — `npm audit signatures`로 검증 가능
-- CI: `npm ci --ignore-scripts`, `npm audit`, ESLint v9, Jest, 레포 단위 커버리지 임계값 게이트
+- CI: `npm ci --ignore-scripts`, `npm audit`, ESLint v10, Jest, 레포 단위 커버리지 임계값 게이트
 - CodeQL 정적 분석 (push/PR + 주간)
 - 주간 CI 헬스 체크 + 실패 시 이슈 자동 생성 (`maintenance.yml`)
 - 비활성 이슈/PR 자동 정리 (`stale.yml`)
@@ -212,7 +213,7 @@ TypeScript는 강제가 아니라 선택입니다.
 
 **설계 의도 (Design intent)**
 - TypeScript가 아닌 vanilla JavaScript — 빌드 스텝 없는 표면 유지
-- runtime 의존성 0개, devDependency 4개 — supply-chain 표면 최소화
+- runtime 의존성 0개, devDependency 5개 — supply-chain 표면 최소화
 - 장기 토큰 대신 OIDC trusted publishing — 회전/유출할 `NPM_TOKEN` 자체가 없음
 - CI/CD에서 `--ignore-scripts` — Shai-Hulud 류 postinstall 공격 완화
 - 글로벌 기준이 아닌 레포 단위 커버리지 임계값 — 프로젝트는 각자의 출발점에서 시작

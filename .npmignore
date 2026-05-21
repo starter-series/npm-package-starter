@@ -8,3 +8,8 @@ eslint.config.js
 .env
 .idea/
 *.tgz
+
+# TODO(2nd-pass-audit-2026-05-21): README.ko.md (~10 kB) currently ships
+# in the npm tarball because npm auto-includes any README.* file. Decide
+# whether to keep it (i18n docs reach installers) or exclude it (only
+# README.md renders on npmjs.com; cuts ~50% of tarball size).

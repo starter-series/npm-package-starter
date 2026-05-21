@@ -62,8 +62,9 @@ Then start coding:
 ├── docs/
 │   └── NPM_PUBLISH_SETUP.md   # Trusted publishing setup guide
 ├── scripts/
-│   └── bump-version.js         # Semver version bumper
-├── eslint.config.js            # ESLint v9 flat config
+│   ├── bump-version.js         # SemVer version bumper (prepublishOnly-safe)
+│   └── check-metadata.js       # Refuses to publish placeholder metadata
+├── eslint.config.js            # ESLint v10 flat config
 ├── .gitignore
 ├── .npmignore                  # Keeps published package clean
 └── package.json
@@ -76,9 +77,9 @@ Then start coding:
 - **CI Pipeline** — Security audit, lint, test on every push and PR
 - **CD Pipeline** — One-click publish to npm + auto GitHub Release
 - **Version management** — `npm run version:patch/minor/major`
-- **ESLint v9** — Flat config, Node + Jest globals
+- **ESLint v10** — Flat config, Node + Jest globals
 - **Template setup** — Auto-creates setup checklist issue on first use
-- **Minimal** — 4 devDependencies, 0 runtime dependencies
+- **Minimal** — 5 devDependencies, 0 runtime dependencies
 
 ## CI/CD
 
@@ -88,7 +89,7 @@ Then start coding:
 |------|-------------|
 | Install | `npm ci` with lockfile verification |
 | Security audit | `npm audit` for dependency vulnerabilities |
-| Lint | ESLint v9 flat config |
+| Lint | ESLint v10 flat config |
 | Test | Jest |
 
 ### Security & Maintenance
@@ -198,7 +199,7 @@ Both are opt-in to keep the default dependency surface minimal.
 **Currently implemented**
 - OIDC trusted publishing via `cd.yml` (no `NPM_TOKEN`)
 - npm provenance statements — verifiable with `npm audit signatures`
-- CI: `npm ci --ignore-scripts`, `npm audit`, ESLint v9, Jest, per-repo coverage threshold gate
+- CI: `npm ci --ignore-scripts`, `npm audit`, ESLint v10, Jest, per-repo coverage threshold gate
 - CodeQL static analysis (push/PR + weekly)
 - Weekly CI health-check + auto-issue on failure (`maintenance.yml`)
 - Stale issue/PR triage (`stale.yml`)
@@ -212,7 +213,7 @@ Both are opt-in to keep the default dependency surface minimal.
 
 **Design intent**
 - Vanilla JavaScript, not TypeScript — keeps the surface a build-step-free starter
-- Zero runtime dependencies, 4 devDependencies — minimal supply-chain surface
+- Zero runtime dependencies, 5 devDependencies — minimal supply-chain surface
 - OIDC trusted publishing over long-lived tokens — no `NPM_TOKEN` to rotate or leak
 - `--ignore-scripts` in CI/CD — mitigates Shai-Hulud-style postinstall attacks
 - Per-repo coverage threshold (not a global standard) — projects start where they are
