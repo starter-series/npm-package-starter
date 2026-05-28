@@ -20,36 +20,59 @@ describe('bumpVersion (pure)', () => {
     });
   });
 
-  describe('prerelease handling (drop tag, finalize base)', () => {
+  describe('prerelease handling — matches node-semver / npm version', () => {
     test.each([
       // patch from prerelease finalizes the base (no increment).
       ['1.0.0-rc.1', 'patch', '1.0.0'],
       ['1.0.0-alpha', 'patch', '1.0.0'],
       ['2.3.4-beta.5', 'patch', '2.3.4'],
-      // minor/major still bump the corresponding component, dropping prerelease.
-      ['1.0.0-rc.1', 'minor', '1.1.0'],
-      ['1.0.0-rc.1', 'major', '2.0.0'],
-      ['1.2.3-beta', 'minor', '1.3.0'],
+
+      // minor on prerelease: bump only when patch != 0; otherwise finalize.
+      // (This was the regression caught by the 2026-05-21 code review.)
+      ['1.0.0-rc.1', 'minor', '1.0.0'],   // patch == 0 -> finalize
+      ['1.2.0-rc.1', 'minor', '1.2.0'],   // patch == 0 -> finalize
+      ['1.2.3-beta', 'minor', '1.3.0'],   // patch != 0 -> bump
+      ['1.2.3-rc.1', 'minor', '1.3.0'],
+
+      // major on prerelease: bump only when minor != 0 OR patch != 0.
+      ['1.0.0-rc.1', 'major', '1.0.0'],   // minor == 0 && patch == 0 -> finalize
+      ['1.2.0-rc.1', 'major', '2.0.0'],   // minor != 0 -> bump
+      ['1.0.5-rc.1', 'major', '2.0.0'],   // patch != 0 -> bump
+      ['1.2.3-rc.1', 'major', '2.0.0'],
     ])('bumpVersion(%s, %s) -> %s', (current, type, expected) => {
       expect(bumpVersion(current, type)).toBe(expected);
     });
   });
 
   describe('build metadata is stripped, not preserved', () => {
-    test('1.0.0+build.123 patch -> 1.0.1', () => {
-      expect(bumpVersion('1.0.0+build.123', 'patch')).toBe('1.0.1');
-    });
-    test('1.0.0-rc.1+build patch -> 1.0.0', () => {
-      expect(bumpVersion('1.0.0-rc.1+build', 'patch')).toBe('1.0.0');
+    test.each([
+      ['1.0.0+build.123', 'patch', '1.0.1'],
+      ['1.0.0+build.123', 'minor', '1.1.0'],
+      ['1.2.3+sha.abc', 'major', '2.0.0'],
+      ['1.0.0-rc.1+build', 'patch', '1.0.0'],
+      ['1.0.0-rc.1+build', 'minor', '1.0.0'], // also finalizes per prerelease rule
+      ['1.0.0-rc.1+build', 'major', '1.0.0'], // also finalizes per prerelease rule
+    ])('bumpVersion(%s, %s) -> %s (no "+...")', (current, type, expected) => {
+      const result = bumpVersion(current, type);
+      expect(result).toBe(expected);
+      expect(result).not.toMatch(/\+/);
     });
   });
 
   describe('rejects invalid input', () => {
     test.each([
-      ['v1.2.3', 'patch'],   // leading "v"
-      ['1.2', 'patch'],       // missing patch component
-      ['1.2.3.4', 'patch'],   // too many components
-      ['1.02.3', 'patch'],    // leading zero
+      ['v1.2.3', 'patch'],          // leading "v"
+      ['1.2', 'patch'],              // missing patch component
+      ['1.2.3.4', 'patch'],          // too many components
+      ['1.02.3', 'patch'],           // leading zero in major/minor/patch
+      ['01.0.0', 'patch'],           // leading zero in major
+      ['1.0.0-', 'patch'],           // empty prerelease identifier
+      ['1.0.0-00', 'patch'],         // leading zero in numeric prerelease ident
+      ['1.0.0-1..0', 'patch'],       // empty middle identifier
+      ['1.0.0+', 'patch'],           // empty build metadata
+      ['1.0.0+build+more', 'patch'], // multiple '+' separators
+      ['-1.0.0', 'patch'],           // negative major
+      ['1.0.0\n', 'patch'],          // trailing newline (regex must be anchored)
       ['not-a-version', 'patch'],
     ])('throws on invalid SemVer "%s"', (current) => {
       expect(() => bumpVersion(current, 'patch')).toThrow(/not a valid SemVer/);
@@ -129,5 +152,19 @@ describe('bump-version.js CLI', () => {
     const { status, stderr } = run(dir, ['patch']);
     expect(status).toBe(1);
     expect(stderr).toMatch(/Failed to read\/parse/);
+  });
+
+  test('exits 1 on explicit empty-string type (does not silently default to patch)', () => {
+    const dir = mkPkg({ name: 'x', version: '1.2.3' });
+    const { status, stderr } = run(dir, ['']);
+    expect(status).toBe(1);
+    expect(stderr).toMatch(/empty string|major\|minor\|patch/);
+  });
+
+  test('writes the rewritten package.json with a trailing newline', () => {
+    const dir = mkPkg({ name: 'x', version: '1.2.3' });
+    run(dir, ['patch']);
+    const written = fs.readFileSync(path.join(dir, 'package.json'), 'utf8');
+    expect(written.endsWith('\n')).toBe(true);
   });
 });
