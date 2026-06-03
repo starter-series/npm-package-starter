@@ -36,6 +36,7 @@ docs/
    - Repository name: your repo name
    - Workflow: `cd.yml`
    - Environment: `npm`
+   - Allowed actions: include `npm publish` (required for configs created on/after 2026-05-20; older configs auto-granted)
 3. In GitHub repo → Settings → Environments → Create environment named `npm`
 
 See docs/NPM_PUBLISH_SETUP.md for detailed steps.

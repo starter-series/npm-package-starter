@@ -40,6 +40,17 @@ No secrets needed. The CD workflow uses GitHub's OIDC token to authenticate with
    - Commit and push to `main`
    - Go to **Actions** → **Publish to npm** → **Run workflow**
 
+### After 2026-05-20: select an allowed action
+
+npm trusted-publisher configurations created on or after **2026-05-20** must
+explicitly select at least one allowed action. When you add the trusted
+publisher on npmjs.com (package → **Settings → Trusted Publisher**), set
+**Allowed actions** to include **`npm publish`**. Configurations created
+before that date were auto-granted publish and are unaffected.
+
+Without this, the OIDC `npm publish` step in CD is rejected at release time
+with an authorization error.
+
 ## Option 2: Classic npm Token
 
 If you can't use OIDC (e.g., private npm registry), use a classic automation token.
