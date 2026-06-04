@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { isValidSemVer } = require('./semver');
 
 const TEMPLATE_DEFAULTS = Object.freeze({
   name: 'my-package',
@@ -29,6 +30,24 @@ function checkMetadata(pkg) {
     return { ok: false, errors: ['package.json must be a JSON object.'] };
   }
   const errors = [];
+
+  // version: the single most publish-critical field — npm rejects a publish
+  // outright if it's absent, and a malformed version (leading "v", "1.2",
+  // leading zeros, etc.) corrupts the release / provenance flow. Split into
+  // distinct branches so the message names the actual failure mode. Uses the
+  // strict SemVer check shared with bump-version.js (stricter than
+  // semver.valid: no leading "v", no leading zeros).
+  if (pkg.version === undefined || pkg.version === null) {
+    errors.push('"version" is missing. npm cannot publish without a version.');
+  } else if (typeof pkg.version !== 'string') {
+    errors.push(`"version" must be a string; got ${typeof pkg.version}.`);
+  } else if (pkg.version.trim() === '') {
+    errors.push('"version" is empty. Set a valid SemVer version, e.g. "1.0.0".');
+  } else if (!isValidSemVer(pkg.version)) {
+    errors.push(
+      `"version" ("${pkg.version}") is not a valid SemVer 2.0.0 version. Use e.g. "1.0.0" (no leading "v", no leading zeros).`,
+    );
+  }
 
   // name: must be a non-empty string and not the template default. Split
   // into distinct branches so the error message matches the actual

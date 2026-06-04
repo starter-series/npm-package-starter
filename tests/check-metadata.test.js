@@ -20,6 +20,51 @@ describe('checkMetadata (pure)', () => {
     expect(checkMetadata(GOOD)).toEqual({ ok: true, errors: [] });
   });
 
+  describe('version', () => {
+    test('rejects missing (undefined / null) with a "missing" message', () => {
+      const noVer = { ...GOOD };
+      delete noVer.version;
+      const { ok, errors } = checkMetadata(noVer);
+      expect(ok).toBe(false);
+      expect(errors).toEqual(expect.arrayContaining([expect.stringMatching(/"version" is missing/)]));
+    });
+    test('rejects null version with a "missing" message', () => {
+      const { ok, errors } = checkMetadata({ ...GOOD, version: null });
+      expect(ok).toBe(false);
+      expect(errors).toEqual(expect.arrayContaining([expect.stringMatching(/"version" is missing/)]));
+    });
+    test.each([42, true, false, {}, []])('rejects non-string version (%p) with a type message', (bad) => {
+      const { ok, errors } = checkMetadata({ ...GOOD, version: bad });
+      expect(ok).toBe(false);
+      expect(errors).toEqual(expect.arrayContaining([expect.stringMatching(/"version" must be a string/)]));
+    });
+    test('rejects empty string with a distinct "empty" message', () => {
+      const { ok, errors } = checkMetadata({ ...GOOD, version: '' });
+      expect(ok).toBe(false);
+      expect(errors).toEqual(expect.arrayContaining([expect.stringMatching(/"version" is empty/)]));
+    });
+    test('rejects whitespace-only with the "empty" message', () => {
+      const { ok, errors } = checkMetadata({ ...GOOD, version: '   ' });
+      expect(ok).toBe(false);
+      expect(errors).toEqual(expect.arrayContaining([expect.stringMatching(/"version" is empty/)]));
+    });
+    test.each([
+      'v1.2.3',   // leading "v"
+      '1.2',      // missing patch component
+      '1.2.3.4',  // too many components
+      '01.0.0',   // leading zero
+      '1.0.0-',   // empty prerelease identifier
+      'latest',   // dist-tag, not a version
+    ])('rejects malformed SemVer "%s" with a SemVer message', (bad) => {
+      const { ok, errors } = checkMetadata({ ...GOOD, version: bad });
+      expect(ok).toBe(false);
+      expect(errors).toEqual(expect.arrayContaining([expect.stringMatching(/not a valid SemVer/)]));
+    });
+    test('accepts a valid prerelease + build-metadata version', () => {
+      expect(checkMetadata({ ...GOOD, version: '1.0.0-rc.1+build.5' }).ok).toBe(true);
+    });
+  });
+
   describe('name', () => {
     test('rejects template default', () => {
       const { ok, errors } = checkMetadata({ ...GOOD, name: TEMPLATE_DEFAULTS.name });

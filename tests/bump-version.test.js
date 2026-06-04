@@ -3,7 +3,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const { bumpVersion } = require('../scripts/bump-version');
+const { bumpVersion, detectIndent } = require('../scripts/bump-version');
 const SCRIPT = path.resolve(__dirname, '..', 'scripts', 'bump-version.js');
 
 describe('bumpVersion (pure)', () => {
@@ -93,10 +93,44 @@ describe('bumpVersion (pure)', () => {
   });
 });
 
+describe('detectIndent (pure)', () => {
+  test('detects 2-space indent', () => {
+    expect(detectIndent('{\n  "a": 1\n}\n')).toBe(2);
+  });
+  test('detects 4-space indent', () => {
+    expect(detectIndent('{\n    "a": 1\n}\n')).toBe(4);
+  });
+  test('detects tab indent', () => {
+    expect(detectIndent('{\n\t"a": 1\n}\n')).toBe('\t');
+  });
+  test('uses the first nested property to pick the base unit (tab wins over deeper spaces)', () => {
+    // First indented quote is tab-indented -> tab, regardless of deeper lines.
+    expect(detectIndent('{\n\t"a": {\n\t\t"b": 1\n\t}\n}\n')).toBe('\t');
+  });
+  test('falls back to 2 when there is no indentation (single-line JSON)', () => {
+    expect(detectIndent('{"a":1}')).toBe(2);
+  });
+  test('falls back to 2 when no indented property line exists', () => {
+    expect(detectIndent('{}\n')).toBe(2);
+  });
+  test('falls back to 2 on non-string input', () => {
+    expect(detectIndent(undefined)).toBe(2);
+    expect(detectIndent(null)).toBe(2);
+    expect(detectIndent(42)).toBe(2);
+    expect(detectIndent({})).toBe(2);
+  });
+});
+
 describe('bump-version.js CLI', () => {
   function mkPkg(pkg) {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bump-version-'));
     fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2) + '\n');
+    return dir;
+  }
+  // Like mkPkg but writes raw text so a test can control exact indentation.
+  function mkPkgRaw(text) {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bump-version-'));
+    fs.writeFileSync(path.join(dir, 'package.json'), text);
     return dir;
   }
   function run(cwd, args) {
@@ -159,6 +193,35 @@ describe('bump-version.js CLI', () => {
     const { status, stderr } = run(dir, ['']);
     expect(status).toBe(1);
     expect(stderr).toMatch(/empty string|major\|minor\|patch/);
+  });
+
+  test('exits 1 when no bump type is given (does not silently default to patch)', () => {
+    const dir = mkPkg({ name: 'x', version: '1.2.3' });
+    const { status, stderr } = run(dir, []);
+    expect(status).toBe(1);
+    expect(stderr).toMatch(/Missing bump type|major\|minor\|patch/);
+    // package.json must be untouched on a usage error.
+    const after = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
+    expect(after.version).toBe('1.2.3');
+  });
+
+  test('preserves 4-space indentation on rewrite (no reindent noise)', () => {
+    const raw = '{\n    "name": "x",\n    "version": "1.2.3"\n}\n';
+    const dir = mkPkgRaw(raw);
+    const { status } = run(dir, ['patch']);
+    expect(status).toBe(0);
+    const written = fs.readFileSync(path.join(dir, 'package.json'), 'utf8');
+    expect(written).toContain('\n    "version": "1.2.4"');
+    expect(written).not.toContain('\n  "version"'); // not clobbered to 2-space
+  });
+
+  test('preserves tab indentation on rewrite', () => {
+    const raw = '{\n\t"name": "x",\n\t"version": "1.2.3"\n}\n';
+    const dir = mkPkgRaw(raw);
+    const { status } = run(dir, ['minor']);
+    expect(status).toBe(0);
+    const written = fs.readFileSync(path.join(dir, 'package.json'), 'utf8');
+    expect(written).toContain('\n\t"version": "1.3.0"');
   });
 
   test('writes the rewritten package.json with a trailing newline', () => {

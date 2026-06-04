@@ -1,9 +1,9 @@
 const fs = require('fs');
 
-// Strict SemVer 2.0.0 grammar (https://semver.org/#backus-naur-form-grammar-for-valid-semver-versions),
-// stripped of build metadata (we don't preserve build metadata across bumps).
-const SEMVER_RE =
-  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*)?$/;
+// Strict SemVer 2.0.0 validation, shared with check-metadata.js so both
+// release scripts agree on what "a valid version" means (single source of
+// truth, zero runtime deps).
+const { SEMVER_RE } = require('./semver');
 
 const VALID_TYPES = ['major', 'minor', 'patch'];
 
@@ -65,24 +65,60 @@ function bumpVersion(current, type) {
   return `${major + 1}.0.0`;
 }
 
-module.exports = { bumpVersion };
+/**
+ * Infer the indentation unit used by a JSON document from its raw text, so
+ * a rewrite (JSON.stringify) preserves the author's style instead of
+ * clobbering tabs / 4-space indent down to 2 spaces and producing unrelated
+ * diff noise on every version bump.
+ *
+ * Returns a value suitable as the 3rd arg to JSON.stringify:
+ *   - a tab string ('\t') when the first indented line is tab-indented,
+ *   - the number of leading spaces when it is space-indented,
+ *   - 2 (the npm default) when no indentation can be detected.
+ *
+ * Looks at the first line that begins with whitespace then a quote (i.e. the
+ * first nested property), which reflects the document's base indent unit.
+ *
+ * @param {string} text - raw JSON source
+ * @returns {number|string} indent unit for JSON.stringify
+ */
+function detectIndent(text) {
+  if (typeof text !== 'string') return 2;
+  const m = text.match(/^([ \t]+)"/m);
+  if (!m) return 2;
+  const ws = m[1];
+  if (ws[0] === '\t') return '\t';
+  return ws.length;
+}
+
+module.exports = { bumpVersion, detectIndent };
 
 // CLI shim — only run when invoked directly, not when imported by tests.
 // Verified end-to-end via execFileSync; exempt from in-process coverage.
 /* istanbul ignore if -- CLI shim, covered by integration tests */
 if (require.main === module) {
-  // Reject an explicitly-empty arg instead of silently defaulting to
-  // 'patch' — a CI wrapper that forwards an unset env var as "" should
-  // fail loudly, not bump.
-  if (process.argv.length >= 3 && process.argv[2] === '') {
+  // Require an explicit bump type. Previously a missing arg silently
+  // defaulted to 'patch' — dangerous when a CI wrapper forwards an unset
+  // variable: an unintended patch release would slip out instead of failing
+  // loudly. Both "no arg at all" and an explicit empty string are errors.
+  const arg = process.argv[2];
+  if (arg === undefined) {
+    console.error(
+      `Missing bump type. Usage: node scripts/bump-version.js <${VALID_TYPES.join('|')}>`,
+    );
+    process.exit(1);
+  }
+  if (arg === '') {
     console.error(`type must be one of ${VALID_TYPES.join('|')}; got empty string`);
     process.exit(1);
   }
-  const type = process.argv[2] || 'patch';
+  const type = arg;
   const pkgPath = 'package.json';
+  let raw;
   let pkg;
   try {
-    pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    raw = fs.readFileSync(pkgPath, 'utf8');
+    pkg = JSON.parse(raw);
   } catch (err) {
     console.error(`Failed to read/parse ${pkgPath}: ${err.message}`);
     process.exit(1);
@@ -99,10 +135,10 @@ if (require.main === module) {
     process.exit(1);
   }
   pkg.version = next;
-  // TODO(2nd-pass-audit-2026-05-21): JSON.stringify normalizes indentation
-  // to 2 spaces. If a user's package.json uses tabs or 4-space indent,
-  // this rewrite causes unrelated diff noise on every version bump.
-  // Consider detecting the existing indentation before re-serializing.
-  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+  // Preserve the file's existing indentation (tabs / 4-space / 2-space)
+  // instead of clobbering to 2 spaces, so a version bump produces a minimal
+  // one-line diff rather than reindenting the whole file.
+  const indent = detectIndent(raw);
+  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, indent) + '\n');
   console.log(next);
 }
