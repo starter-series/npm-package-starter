@@ -168,8 +168,9 @@ npm run lint
 npm test
 
 # 패키지 표면 검증
-npm run build       # main/exports/files/bin/types 경로 검증
-npm run pack:check  # npm pack --dry-run --json
+npm run build           # main/exports/files/bin/types 경로 검증
+npm run pack:check      # npm pack --dry-run 내용 검증
+npm run check:metadata  # 템플릿 metadata 교체 전까지 실패
 ```
 
 ## 직접 설정 대신 이걸 쓰는 이유
@@ -212,7 +213,7 @@ TypeScript는 강제가 아니라 선택입니다.
 - `cd.yml`을 통한 OIDC trusted publishing (`NPM_TOKEN` 불필요)
 - npm provenance statement — `npm audit signatures`로 검증 가능
 - CI: `npm ci --ignore-scripts`, `npm audit`, ESLint v10, Jest, 레포 단위 커버리지 임계값 게이트
-- 빌드/패키지 검증: `npm run build`가 `main` / `exports` / `files` / 선택적 `bin`, `types`를 검증하고, `npm run pack:check`가 tarball 내용을 확인
+- 빌드/패키지 검증: `npm run build`가 `main` / `exports` / `files` / 선택적 `bin`, `types`를 검증하고, `npm run pack:check`가 tarball에 해당 entrypoint가 들어가는지 확인하며, `prepublishOnly`가 metadata, build, pack 검사를 함께 실행
 - CodeQL 정적 분석 (push/PR + 주간)
 - 주간 CI 헬스 체크 + 실패 시 이슈 자동 생성 (`maintenance.yml`)
 - 비활성 이슈/PR 자동 정리 (`stale.yml`)

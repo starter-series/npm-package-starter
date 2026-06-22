@@ -13,9 +13,9 @@
     "build": "node scripts/verify-package.js",
     "lint": "eslint src/ tests/ scripts/",
     "test": "jest --verbose --coverage",
-    "pack:check": "npm pack --dry-run --json",
+    "pack:check": "node scripts/verify-pack.js",
     "check:metadata": "node scripts/check-metadata.js",
-    "prepublishOnly": "node scripts/check-metadata.js",
+    "prepublishOnly": "npm run check:metadata && npm run build && npm run pack:check",
     "version:patch": "node scripts/bump-version.js patch",
     "version:minor": "node scripts/bump-version.js minor",
     "version:major": "node scripts/bump-version.js major"
