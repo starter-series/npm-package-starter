@@ -168,8 +168,9 @@ npm run lint
 npm test
 
 # Package-surface checks
-npm run build       # verifies main/exports/files/bin/types paths
-npm run pack:check  # npm pack --dry-run --json
+npm run build           # verifies main/exports/files/bin/types paths
+npm run pack:check      # verifies npm pack --dry-run contents
+npm run check:metadata  # fails until template metadata is replaced
 ```
 
 ## Why This Over Manual Setup?
@@ -212,7 +213,7 @@ Both are opt-in to keep the default dependency surface minimal.
 - OIDC trusted publishing via `cd.yml` (no `NPM_TOKEN`)
 - npm provenance statements — verifiable with `npm audit signatures`
 - CI: `npm ci --ignore-scripts`, `npm audit`, ESLint v10, Jest, per-repo coverage threshold gate
-- Build/package verification: `npm run build` validates `main` / `exports` / `files` / optional `bin` and `types`; `npm run pack:check` verifies the tarball contents
+- Build/package verification: `npm run build` validates `main` / `exports` / `files` / optional `bin` and `types`; `npm run pack:check` verifies the tarball contains those entrypoints; `prepublishOnly` runs metadata, build, and pack checks together
 - CodeQL static analysis (push/PR + weekly)
 - Weekly CI health-check + auto-issue on failure (`maintenance.yml`)
 - Stale issue/PR triage (`stale.yml`)
