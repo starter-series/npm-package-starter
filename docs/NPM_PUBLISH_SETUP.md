@@ -37,6 +37,14 @@ No secrets needed. The CD workflow uses GitHub's OIDC token to authenticate with
 
 6. That's it! Trigger the CD workflow:
    - Bump version: `npm run version:patch` (or `version:minor` / `version:major`)
+   - Run the local release preflight:
+     ```bash
+     npm test
+     npm run lint
+     npm run build
+     npm run pack:check
+     npm run check:metadata
+     ```
    - Commit and push to `main`
    - Go to **Actions** → **Publish to npm** → **Run workflow**
 
@@ -76,6 +84,6 @@ If you can't use OIDC (e.g., private npm registry), use a classic automation tok
      run: npm publish --provenance --access public
    ```
 
-## Note on npm Classic Tokens
+## Note on npm Token Fallbacks
 
-npm is deprecating classic automation tokens in December 2025. Granular access tokens or OIDC are the recommended replacements. This starter defaults to OIDC for this reason.
+This starter defaults to OIDC trusted publishing so the release path does not depend on a long-lived npm token. If you cannot use OIDC, verify npm's current token policy before choosing a token-based fallback.
