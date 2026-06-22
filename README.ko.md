@@ -57,13 +57,19 @@ cd my-package && npm install && npm test
 │   ├── workflows/
 │   │   ├── ci.yml              # 린트, 테스트, 보안 감사
 │   │   ├── cd.yml              # OIDC + provenance로 npm 배포
+│   │   ├── codeql.yml          # CodeQL 정적 분석
+│   │   ├── maintenance.yml     # 주간 CI 헬스 체크
+│   │   ├── stale.yml           # 비활성 이슈/PR 정리
+│   │   ├── update-changelog.yml # 릴리즈 노트를 CHANGELOG.md에 반영
+│   │   ├── dependabot-auto-merge.yml # 안전한 Dependabot minor/patch 자동 merge
 │   │   └── setup.yml           # 첫 사용 시 자동 설정 체크리스트
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/
 │   └── NPM_PUBLISH_SETUP.md   # Trusted publishing 설정 가이드
 ├── scripts/
 │   ├── bump-version.js         # SemVer 버전 범퍼 (prepublishOnly-safe)
-│   └── check-metadata.js       # placeholder 메타데이터 publish 거부
+│   ├── check-metadata.js       # placeholder 메타데이터 publish 거부
+│   └── verify-package.js       # main/exports/files/bin/types 경로 검증
 ├── eslint.config.js            # ESLint v10 flat config
 ├── .gitignore
 ├── .npmignore                  # 배포 패키지를 깔끔하게 유지
@@ -78,6 +84,7 @@ cd my-package && npm install && npm test
 - **CD 파이프라인** — 원클릭 npm 배포 + GitHub Release 자동 생성
 - **버전 관리** — `npm run version:patch/minor/major`
 - **ESLint v10** — Flat config, Node + Jest globals
+- **패키지 표면 검증** — `npm run build`로 publish-critical entry 경로 검증
 - **템플릿 셋업** — 첫 사용 시 설정 체크리스트 이슈 자동 생성
 - **최소 의존성** — devDependency 5개, runtime 0개
 
@@ -91,6 +98,7 @@ cd my-package && npm install && npm test
 | 보안 감사 | `npm audit`로 의존성 취약점 확인 |
 | 린트 | ESLint v10 flat config |
 | 테스트 | Jest |
+| 빌드 검증 | `npm run build`로 package entry 경로 확인; `npm run pack:check`로 npm tarball 확인 |
 
 ### 보안 & 유지보수
 
@@ -158,6 +166,10 @@ npm run version:major   # 0.1.0 → 1.0.0
 # 린트 & 테스트
 npm run lint
 npm test
+
+# 패키지 표면 검증
+npm run build       # main/exports/files/bin/types 경로 검증
+npm run pack:check  # npm pack --dry-run --json
 ```
 
 ## 직접 설정 대신 이걸 쓰는 이유
@@ -200,6 +212,7 @@ TypeScript는 강제가 아니라 선택입니다.
 - `cd.yml`을 통한 OIDC trusted publishing (`NPM_TOKEN` 불필요)
 - npm provenance statement — `npm audit signatures`로 검증 가능
 - CI: `npm ci --ignore-scripts`, `npm audit`, ESLint v10, Jest, 레포 단위 커버리지 임계값 게이트
+- 빌드/패키지 검증: `npm run build`가 `main` / `exports` / `files` / 선택적 `bin`, `types`를 검증하고, `npm run pack:check`가 tarball 내용을 확인
 - CodeQL 정적 분석 (push/PR + 주간)
 - 주간 CI 헬스 체크 + 실패 시 이슈 자동 생성 (`maintenance.yml`)
 - 비활성 이슈/PR 자동 정리 (`stale.yml`)

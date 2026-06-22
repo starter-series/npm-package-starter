@@ -57,13 +57,19 @@ Then start coding:
 │   ├── workflows/
 │   │   ├── ci.yml              # Lint, test, security audit
 │   │   ├── cd.yml              # npm publish with OIDC + provenance
+│   │   ├── codeql.yml          # CodeQL static analysis
+│   │   ├── maintenance.yml     # Weekly CI health check
+│   │   ├── stale.yml           # Inactive issue/PR triage
+│   │   ├── update-changelog.yml # Mirrors release notes into CHANGELOG.md
+│   │   ├── dependabot-auto-merge.yml # Safe Dependabot minor/patch merges
 │   │   └── setup.yml           # Auto setup checklist on first use
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/
 │   └── NPM_PUBLISH_SETUP.md   # Trusted publishing setup guide
 ├── scripts/
 │   ├── bump-version.js         # SemVer version bumper (prepublishOnly-safe)
-│   └── check-metadata.js       # Refuses to publish placeholder metadata
+│   ├── check-metadata.js       # Refuses to publish placeholder metadata
+│   └── verify-package.js       # Verifies main/exports/files/bin/types paths
 ├── eslint.config.js            # ESLint v10 flat config
 ├── .gitignore
 ├── .npmignore                  # Keeps published package clean
@@ -78,6 +84,7 @@ Then start coding:
 - **CD Pipeline** — One-click publish to npm + auto GitHub Release
 - **Version management** — `npm run version:patch/minor/major`
 - **ESLint v10** — Flat config, Node + Jest globals
+- **Package surface check** — `npm run build` verifies publish-critical entry paths
 - **Template setup** — Auto-creates setup checklist issue on first use
 - **Minimal** — 5 devDependencies, 0 runtime dependencies
 
@@ -91,6 +98,7 @@ Then start coding:
 | Security audit | `npm audit` for dependency vulnerabilities |
 | Lint | ESLint v10 flat config |
 | Test | Jest |
+| Build verification | `npm run build` checks package entry paths; `npm run pack:check` checks the npm tarball |
 
 ### Security & Maintenance
 
@@ -158,6 +166,10 @@ npm run version:major   # 0.1.0 → 1.0.0
 # Lint & test
 npm run lint
 npm test
+
+# Package-surface checks
+npm run build       # verifies main/exports/files/bin/types paths
+npm run pack:check  # npm pack --dry-run --json
 ```
 
 ## Why This Over Manual Setup?
@@ -200,6 +212,7 @@ Both are opt-in to keep the default dependency surface minimal.
 - OIDC trusted publishing via `cd.yml` (no `NPM_TOKEN`)
 - npm provenance statements — verifiable with `npm audit signatures`
 - CI: `npm ci --ignore-scripts`, `npm audit`, ESLint v10, Jest, per-repo coverage threshold gate
+- Build/package verification: `npm run build` validates `main` / `exports` / `files` / optional `bin` and `types`; `npm run pack:check` verifies the tarball contents
 - CodeQL static analysis (push/PR + weekly)
 - Weekly CI health-check + auto-issue on failure (`maintenance.yml`)
 - Stale issue/PR triage (`stale.yml`)

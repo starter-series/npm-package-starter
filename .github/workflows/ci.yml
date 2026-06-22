@@ -85,7 +85,9 @@ jobs:
 
       - name: Build verification
         if: matrix.node-version == '24'
-        run: npm pack --dry-run
+        run: |
+          npm run build
+          npm run pack:check
 
   # Single-named aggregator so branch protection can require one check
   # ("ci") instead of each matrix cell + each upstream job.

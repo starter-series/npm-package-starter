@@ -10,8 +10,10 @@
     "src"
   ],
   "scripts": {
+    "build": "node scripts/verify-package.js",
     "lint": "eslint src/ tests/ scripts/",
     "test": "jest --verbose --coverage",
+    "pack:check": "npm pack --dry-run --json",
     "check:metadata": "node scripts/check-metadata.js",
     "prepublishOnly": "node scripts/check-metadata.js",
     "version:patch": "node scripts/bump-version.js patch",
