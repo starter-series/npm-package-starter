@@ -29,7 +29,7 @@
 **[create-starter](https://github.com/starter-series/create-starter) 사용** (권장):
 
 ```bash
-npx @starter-series/create my-package --template npm-package
+gh repo create my-package --template starter-series/npm-package-starter --clone
 cd my-package && npm install && npm test
 ```
 

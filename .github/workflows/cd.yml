@@ -41,8 +41,8 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          # Active LTS. ci.yml's test matrix verifies engines>=22 compat.
-          node-version: '24'
+          # Matches the package baseline; ci.yml also verifies Node 24.
+          node-version: '22'
           cache: 'npm'
           registry-url: 'https://registry.npmjs.org'
 
