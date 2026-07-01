@@ -36,7 +36,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '24'
+          node-version: '22'
           cache: 'npm'
 
       - name: Check for large files
@@ -52,7 +52,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Check licenses
-        run: npx license-checker-evergreen --failOn "GPL-2.0;GPL-3.0;AGPL-3.0"
+        run: npm exec -- license-checker-evergreen --failOn "GPL-2.0;GPL-3.0;AGPL-3.0"
 
       - name: Security audit
         run: npm audit --audit-level=high
@@ -65,9 +65,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Active LTS (24) is the publish target in cd.yml. Maintenance LTS
-        # (22) stays in the matrix to catch regressions for downstream
-        # consumers still on 22 until its EOL (April 2027).
+        # Node 22 is the publish target in cd.yml. Node 24 stays in the matrix
+        # to catch regressions for downstream consumers on newer LTS runtimes.
         node-version: ['22', '24']
     steps:
       - uses: actions/checkout@v6
@@ -84,7 +83,7 @@ jobs:
         run: npm test
 
       - name: Build verification
-        if: matrix.node-version == '24'
+        if: matrix.node-version == '22'
         run: |
           npm run build
           npm run pack:check

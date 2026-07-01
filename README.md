@@ -29,7 +29,7 @@ Write your package. One-click publish. Zero secrets needed.
 **Via [create-starter](https://github.com/starter-series/create-starter)** (recommended):
 
 ```bash
-npx @starter-series/create my-package --template npm-package
+gh repo create my-package --template starter-series/npm-package-starter --clone
 cd my-package && npm install && npm test
 ```
 
