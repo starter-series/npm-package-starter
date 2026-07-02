@@ -61,7 +61,7 @@ Then start coding:
 │   │   ├── maintenance.yml     # Weekly CI health check
 │   │   ├── stale.yml           # Inactive issue/PR triage
 │   │   ├── update-changelog.yml # Mirrors release notes into CHANGELOG.md
-│   │   ├── dependabot-auto-merge.yml # Safe Dependabot minor/patch merges
+│   │   ├── dependabot-auto-merge.yml # CI-gated Dependabot minor/patch merges
 │   │   └── setup.yml           # Auto setup checklist on first use
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/
