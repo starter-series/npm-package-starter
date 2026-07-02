@@ -7,9 +7,11 @@ permissions:
   pull-requests: write
 
 jobs:
-  auto-merge:
+  meta:
     if: github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
+    outputs:
+      update-type: ${{ steps.meta.outputs.update-type }}
     steps:
       - name: Fetch Dependabot metadata
         id: meta
@@ -17,18 +19,34 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Enable auto-merge for minor/patch updates
-        if: |
-          steps.meta.outputs.update-type == 'version-update:semver-patch' ||
-          steps.meta.outputs.update-type == 'version-update:semver-minor'
-        run: gh pr merge --auto --squash "$PR_URL"
+      - name: Label major updates for manual review
+        if: steps.meta.outputs.update-type == 'version-update:semver-major'
+        run: gh pr edit "$PR_URL" --add-label "dependencies,manual-review"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Label major updates for manual review
-        if: steps.meta.outputs.update-type == 'version-update:semver-major'
-        run: gh pr edit "$PR_URL" --add-label "dependencies,manual-review"
+  # Run the full CI pipeline in-run so the bump cannot merge unless CI is green.
+  # This does not rely on branch protection being configured on the consumer repo
+  # (a fresh template has none, which would make `--auto` merge immediately).
+  call-ci:
+    needs: meta
+    if: |
+      needs.meta.outputs.update-type == 'version-update:semver-patch' ||
+      needs.meta.outputs.update-type == 'version-update:semver-minor'
+    uses: ./.github/workflows/ci.yml
+
+  # Enable auto-merge only after CI has passed for this PR. `needs: [call-ci]`
+  # means a failed CI run blocks this job, so the merge never happens on red CI.
+  auto-merge:
+    needs: [meta, call-ci]
+    if: |
+      needs.meta.outputs.update-type == 'version-update:semver-patch' ||
+      needs.meta.outputs.update-type == 'version-update:semver-minor'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable auto-merge for minor/patch updates
+        run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

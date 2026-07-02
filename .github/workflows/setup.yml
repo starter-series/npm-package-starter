@@ -48,6 +48,8 @@ jobs:
           See [docs/NPM_PUBLISH_SETUP.md](docs/NPM_PUBLISH_SETUP.md) for a detailed guide.
 
           ## Recommended
+          - [ ] Enable branch protection on `main` and mark the `ci` status check as **required** (Settings → Branches). Dependabot auto-merge runs CI in-workflow before merging, but a required `ci` check also blocks any other unreviewed change from reaching `main`.
+          - [ ] Turn on **Allow auto-merge** (Settings → General) so Dependabot minor/patch PRs can auto-merge once CI passes.
           - [ ] Delete this issue when done
 
           Happy publishing!
