@@ -19,7 +19,7 @@ jobs:
       contents: write
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-tags: true
 
@@ -57,7 +57,7 @@ jobs:
         # valid SLSA provenance can be issued for hijacked workflow runs,
         # so third-party actions are pinned to commit SHAs to defend
         # against tag-rewrite supply-chain attacks.
-        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
         with:
           tag_name: v${{ steps.pkg.outputs.version }}
           name: v${{ steps.pkg.outputs.version }}
