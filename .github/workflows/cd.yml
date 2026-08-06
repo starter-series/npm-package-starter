@@ -19,7 +19,7 @@ jobs:
       contents: write
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-tags: true
 
@@ -39,7 +39,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           # Matches the package baseline; ci.yml also verifies Node 24.
           node-version: '22'
@@ -57,7 +57,7 @@ jobs:
         # valid SLSA provenance can be issued for hijacked workflow runs,
         # so third-party actions are pinned to commit SHAs to defend
         # against tag-rewrite supply-chain attacks.
-        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
           tag_name: v${{ steps.pkg.outputs.version }}
           name: v${{ steps.pkg.outputs.version }}
