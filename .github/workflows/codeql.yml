@@ -11,7 +11,15 @@ permissions:
   contents: read
   security-events: write
 jobs:
-  analyze:
+  codeql:
     uses: starter-series/.github/.github/workflows/reusable-codeql.yml@main
     with:
       language: javascript-typescript
+  analyze:
+    needs: codeql
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: starter-series/.github/.github/actions/require-checks@main
+      with:
+        results: ${{ toJSON(needs) }}
