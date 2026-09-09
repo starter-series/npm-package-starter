@@ -69,3 +69,11 @@ See docs/NPM_PUBLISH_SETUP.md for detailed steps.
 - `files` field in package.json controls what gets published (only `src/`)
 - `private: false` is NOT set — you must remove `"private": true` or it won't publish
 - Zero runtime dependencies by design
+
+## Fleet CI policy
+
+Common runtime, audit, license, secret-scan and CodeQL policy lives in
+[starter-series/.github](https://github.com/starter-series/.github).
+Keep deliverable checks in `.github/actions/validate/action.yml`.
+Weekly health and failures are aggregated in the central Fleet maintenance workflow;
+this repository retains a manual maintenance runner without issue automation.

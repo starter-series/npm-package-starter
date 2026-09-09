@@ -1,0 +1,17 @@
+name: Validate npm-package-starter
+description: Deliverable-specific checks; runtime and security policy live in starter-series/.github.
+runs:
+  using: composite
+  steps:
+  - name: Lint
+    run: npm run lint
+    shell: bash
+  - name: Test
+    run: npm test
+    shell: bash
+  - name: Build verification
+    if: env.FLEET_NODE_VERSION == '22'
+    run: |
+      npm run build
+      npm run pack:check
+    shell: bash

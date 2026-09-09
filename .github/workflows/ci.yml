@@ -1,105 +1,26 @@
 name: CI
-
-on:
+'on':
   push:
-    branches: [main]
+    branches:
+    - main
   pull_request:
-    branches: [main]
-  workflow_call:
-
+    branches:
+    - main
+  workflow_call: {}
+  workflow_dispatch: {}
 permissions:
   contents: read
-
 jobs:
-  # Filesystem and manifest-level checks. Runtime-independent, so they
-  # run once (not per Node matrix cell). gitleaks needs full history;
-  # `test` below uses the default shallow clone.
-  static-checks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Scan for secrets
-        env:
-          # Bump together; checksum from
-          # https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_checksums.txt
-          GITLEAKS_VERSION: 8.30.1
-          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
-        run: |
-          set -euo pipefail
-          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o /tmp/gitleaks.tgz
-          echo "${GITLEAKS_SHA256}  /tmp/gitleaks.tgz" | sha256sum -c -
-          tar xz -C /tmp -f /tmp/gitleaks.tgz
-          /tmp/gitleaks detect --source . --verbose --redact
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Check for large files
-        run: |
-          LARGE=$(find . -not -path './.git/*' -not -path './node_modules/*' -type f -size +5M)
-          if [ -n "$LARGE" ]; then
-            echo "::error::Large files detected (>5 MB):"
-            echo "$LARGE"
-            exit 1
-          fi
-
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Check licenses
-        run: npm exec -- license-checker-evergreen --failOn "GPL-2.0;GPL-3.0;AGPL-3.0"
-
-      - name: Security audit
-        run: npm audit --audit-level=high
-
-      - name: Lint
-        run: npm run lint
-
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        # Node 22 is the publish target in cd.yml. Node 24 stays in the matrix
-        # to catch regressions for downstream consumers on newer LTS runtimes.
-        node-version: ['22', '24']
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Test
-        run: npm test
-
-      - name: Build verification
-        if: matrix.node-version == '22'
-        run: |
-          npm run build
-          npm run pack:check
-
-  # Single-named aggregator so branch protection can require one check
-  # ("ci") instead of each matrix cell + each upstream job.
+  checks:
+    uses: starter-series/.github/.github/workflows/reusable-node-ci.yml@main
+    with:
+      profile: package
   ci:
-    needs: [static-checks, test]
-    if: always()
+    if: ${{ always() }}
+    needs:
+    - checks
     runs-on: ubuntu-latest
     steps:
-      - name: Aggregate result
-        run: |
-          if [ "${{ needs.static-checks.result }}" != "success" ] || \
-             [ "${{ needs.test.result }}" != "success" ]; then
-            echo "::error::CI failed (static-checks=${{ needs.static-checks.result }}, test=${{ needs.test.result }})"
-            exit 1
-          fi
-          echo "All checks passed."
+    - uses: starter-series/.github/.github/actions/require-checks@main
+      with:
+        results: ${{ toJSON(needs) }}
