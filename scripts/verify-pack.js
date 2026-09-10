@@ -1,6 +1,8 @@
 /* istanbul ignore file -- exercised end-to-end by npm run pack:check. */
 const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 const { verifyPackageSurface } = require('./verify-package');
 
@@ -95,6 +97,41 @@ function main() {
   }
 
   console.log(`package tarball looks good (${manifest.entryCount} packed files).`);
+  verifyConsumer(pkg, process.cwd());
+}
+
+function runNpm(args, cwd) {
+  // npm_execpath lets Node launch npm on Windows without cmd.exe or shell interpolation.
+  const result = process.env.npm_execpath
+    ? spawnSync(process.execPath, [process.env.npm_execpath, ...args], { cwd, encoding: 'utf8' })
+    : spawnSync('npm', args, { cwd, encoding: 'utf8' });
+  if (result.error || result.status !== 0) {
+    throw new Error(result.error?.message || result.stderr || result.stdout || `npm exited ${result.status}`);
+  }
+  return result.stdout;
+}
+
+function verifyConsumer(pkg, root) {
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'package-consumer-'));
+  try {
+    const [packed] = JSON.parse(runNpm(['pack', '--json', '--pack-destination', temporary], root));
+    const consumer = path.join(temporary, 'consumer');
+    fs.mkdirSync(consumer);
+    fs.writeFileSync(path.join(consumer, 'package.json'), JSON.stringify({ private: true }));
+    runNpm(['install', '--ignore-scripts', '--no-audit', '--no-fund', '--package-lock=false', path.join(temporary, packed.filename)], consumer);
+    for (const source of [
+      `const api = require(${JSON.stringify(pkg.name)}); if (api == null) throw new Error('Empty require result');`,
+      `const api = await import(${JSON.stringify(pkg.name)}); if (!Object.keys(api).length) throw new Error('Empty import result');`,
+    ]) {
+      const imported = spawnSync(process.execPath, ['--input-type=' + (source.includes('await import') ? 'module' : 'commonjs'), '-e', source], {
+        cwd: consumer, encoding: 'utf8', env: { ...process.env, NODE_PATH: '' },
+      });
+      if (imported.error || imported.status !== 0) throw new Error(imported.error?.message || imported.stderr || 'Consumer import failed');
+    }
+    console.log('Installed tarball loads through both require() and import() in a fresh consumer.');
+  } finally {
+    fs.rmSync(temporary, { recursive: true, force: true });
+  }
 }
 
 if (require.main === module) main();
